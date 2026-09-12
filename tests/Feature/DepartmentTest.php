@@ -55,6 +55,40 @@ class DepartmentTest extends TestCase
             ->assertJsonValidationErrors(['name', 'status']);
     }
 
+    ### Exibicao de departamento e seus colaboradores ###
+    public function test_exibe_departamento_e_seus_colaboradores(): void
+    {
+        $departamento = Department::factory()->create(['name' => 'Suporte Tecnico']);
+        Employee::factory()->count(2)->create(['department_id' => $departamento->id]);
+
+        $resposta = $this->withHeader('Authorization', "Bearer {$this->token}")
+            ->getJson("/api/departments/{$departamento->id}");
+
+        $resposta->assertStatus(200)
+            ->assertJsonPath('data.name', 'Suporte Tecnico')
+            ->assertJsonCount(2, 'data.employees');
+    }
+
+    ### Atualizacao de departamento existente ###
+    public function test_permite_atualizar_departamento(): void
+    {
+        $departamento = Department::factory()->create(['name' => 'Nome Antigo']);
+
+        $resposta = $this->withHeader('Authorization', "Bearer {$this->token}")
+            ->putJson("/api/departments/{$departamento->id}", [
+                'name' => 'Nome Atualizado',
+                'description' => 'Nova descricao.',
+            ]);
+
+        $resposta->assertStatus(200)
+            ->assertJsonPath('data.name', 'Nome Atualizado');
+
+        $this->assertDatabaseHas('departments', [
+            'id' => $departamento->id,
+            'name' => 'Nome Atualizado',
+        ]);
+    }
+
     ### Bloqueio de exclusao de departamento com colaboradores ativos ###
     public function test_nao_permite_exclusao_de_departamento_com_colaboradores_ativos(): void
     {
@@ -79,7 +113,6 @@ class DepartmentTest extends TestCase
     public function test_permite_exclusao_de_departamento_sem_colaboradores_ativos(): void
     {
         $departamento = Department::factory()->create();
-        // Colaborador inativo vinculado
         Employee::factory()->create([
             'department_id' => $departamento->id,
             'status' => 'inativo',

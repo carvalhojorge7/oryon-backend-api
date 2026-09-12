@@ -115,6 +115,34 @@ class EmployeeTest extends TestCase
             ->assertJsonValidationErrors(['status']);
     }
 
+    ### Exibicao de colaborador por ID ###
+    public function test_exibe_detalhes_do_colaborador(): void
+    {
+        $colaborador = Employee::factory()->create(['name' => 'Lucas Ferreira']);
+
+        $resposta = $this->withHeader('Authorization', "Bearer {$this->token}")
+            ->getJson("/api/employees/{$colaborador->id}");
+
+        $resposta->assertStatus(200)
+            ->assertJsonPath('data.name', 'Lucas Ferreira');
+    }
+
+    ### Atualizacao de colaborador ###
+    public function test_permite_atualizar_colaborador(): void
+    {
+        $colaborador = Employee::factory()->create(['role' => 'Junior']);
+
+        $resposta = $this->withHeader('Authorization', "Bearer {$this->token}")
+            ->putJson("/api/employees/{$colaborador->id}", [
+                'role' => 'Pleno',
+            ]);
+
+        $resposta->assertStatus(200)
+            ->assertJsonPath('data.role', 'Pleno');
+
+        $this->assertEquals('Pleno', $colaborador->fresh()->role);
+    }
+
     ### Inativacao do colaborador atraves do endpoint DELETE ###
     public function test_inativa_colaborador_atraves_do_endpoint_delete(): void
     {
