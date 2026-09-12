@@ -5,19 +5,35 @@ namespace App\Services;
 use App\Models\Department;
 use DomainException;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Cache;
 
 class DepartmentService
 {
-    ### Listagem paginada com filtro por status ###
+    ### Invalida o cache de listagem de departamentos ###
+    public function limparCache(): void
+    {
+        if (!Cache::has('departamentos:cache_versao')) {
+            Cache::forever('departamentos:cache_versao', 1);
+        }
+        Cache::increment('departamentos:cache_versao');
+    }
+
+    ### Listagem paginada com cache inteligente e filtro por status ###
     public function listar(array $filtros = [], int $porPagina = 15): LengthAwarePaginator
     {
-        $query = Department::query();
+        $versaoCache = Cache::get('departamentos:cache_versao', 1);
+        $paginaAtual = (int) ($filtros['page'] ?? request('page', 1));
+        $chaveCache = "departamentos:v{$versaoCache}:" . md5(json_encode($filtros) . "_{$paginaAtual}_{$porPagina}");
 
-        if (!empty($filtros['status'])) {
-            $query->where('status', $filtros['status']);
-        }
+        return Cache::remember($chaveCache, now()->addMinutes(10), function () use ($filtros, $porPagina) {
+            $query = Department::query();
 
-        return $query->orderBy('name')->paginate($porPagina);
+            if (!empty($filtros['status'])) {
+                $query->where('status', $filtros['status']);
+            }
+
+            return $query->orderBy('name')->paginate($porPagina);
+        });
     }
 
     ### Consulta departamento por ID com colaboradores vinculados ###
@@ -29,7 +45,10 @@ class DepartmentService
     ### Criacao de novo departamento ###
     public function criar(array $dados): Department
     {
-        return Department::create($dados);
+        $departamento = Department::create($dados);
+        $this->limparCache();
+
+        return $departamento;
     }
 
     ### Atualizacao dos dados do departamento ###
@@ -37,6 +56,7 @@ class DepartmentService
     {
         $departamento = Department::findOrFail($id);
         $departamento->update($dados);
+        $this->limparCache();
 
         return $departamento->fresh();
     }
@@ -53,7 +73,10 @@ class DepartmentService
 
         // Remove colaboradores inativos se existirem para manter integridade
         $departamento->employees()->forceDelete();
+        $resultado = (bool) $departamento->delete();
 
-        return (bool) $departamento->delete();
+        $this->limparCache();
+
+        return $resultado;
     }
 }

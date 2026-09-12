@@ -10,6 +10,10 @@ use Throwable;
 
 class TransferService
 {
+    public function __construct(
+        protected DepartmentService $departmentService
+    ) {}
+
     ### Executa a transferencia atomica de colaboradores ativos entre departamentos ###
     public function transferir(int $origemId, int $destinoId): int
     {
@@ -26,16 +30,19 @@ class TransferService
 
         ### 4 e 5. Executa a transferencia dentro de transacao com rollback em caso de falha ###
         try {
-            return DB::transaction(function () use ($origem, $destino) {
+            $quantidadeTransferida = DB::transaction(function () use ($origem, $destino) {
                 // Seleciona e atualiza exclusivamente os colaboradores com status ativo
-                $quantidadeTransferida = Employee::where('department_id', $origem->id)
+                return Employee::where('department_id', $origem->id)
                     ->where('status', 'ativo')
                     ->update(['department_id' => $destino->id]);
-
-                return $quantidadeTransferida;
             });
+
+            // Invalida cache de listagem de departamentos apos a transferencia
+            $this->departmentService->limparCache();
+
+            return $quantidadeTransferida;
         } catch (Throwable $e) {
-            // Em caso de erro nao tratado, repassa a excecao para garantir o rollback
+            // Em caso de erro, repassa a excecao para garantir o rollback
             throw $e;
         }
     }
