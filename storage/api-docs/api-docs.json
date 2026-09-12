@@ -1,0 +1,895 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Oryon Gestao API - Documentacao de Endpoints",
+        "description": "API RESTful profissional desenvolvida em Laravel 11 para gestao de departamentos, colaboradores e movimentacao estrategica de equipes.",
+        "contact": {
+            "name": "Jorge Carvalho",
+            "email": "carvalhojorge7@gmail.com"
+        },
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "http://localhost:8000",
+            "description": "Servidor Local de Desenvolvimento"
+        }
+    ],
+    "paths": {
+        "/api/auth/login": {
+            "post": {
+                "tags": [
+                    "Autenticacao"
+                ],
+                "summary": "Autenticacao do usuario",
+                "description": "Valida as credenciais informadas e retorna um token de acesso JWT.",
+                "operationId": "dd51a484b7fa0f97c7680fdbde14cf5f",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "password"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "admin@oryon.com.br"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "senha123"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Login realizado com sucesso",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "token_de_acesso": {
+                                            "type": "string",
+                                            "example": "eyJ0eXAiOiJKV1QiLCJhbGciOi..."
+                                        },
+                                        "tipo_token": {
+                                            "type": "string",
+                                            "example": "bearer"
+                                        },
+                                        "expira_em_segundos": {
+                                            "type": "integer",
+                                            "example": 3600
+                                        },
+                                        "usuario": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Credenciais invalidas"
+                    }
+                }
+            }
+        },
+        "/api/auth/me": {
+            "get": {
+                "tags": [
+                    "Autenticacao"
+                ],
+                "summary": "Dados do usuario autenticado",
+                "description": "Retorna as informacoes cadastrais do usuario autenticado.",
+                "operationId": "b5de204f5e452ef51327c691aa99e77c",
+                "responses": {
+                    "200": {
+                        "description": "Dados do usuario retornados com sucesso",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "usuario": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Nao autenticado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/auth/logout": {
+            "post": {
+                "tags": [
+                    "Autenticacao"
+                ],
+                "summary": "Encerramento de sessao",
+                "description": "Invalida o token JWT atual.",
+                "operationId": "df9bdc6c7a6d9f20b983526b2ec0f698",
+                "responses": {
+                    "200": {
+                        "description": "Sessao encerrada",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "mensagem": {
+                                            "type": "string",
+                                            "example": "Sessao encerrada com sucesso."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Nao autenticado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/auth/refresh": {
+            "post": {
+                "tags": [
+                    "Autenticacao"
+                ],
+                "summary": "Renovacao de token",
+                "description": "Renova o token JWT de acesso expirado gerando um novo tempo de validade.",
+                "operationId": "30c20c52f5f72828d8c531fd7c9ea3e7",
+                "responses": {
+                    "200": {
+                        "description": "Token renovado com sucesso"
+                    },
+                    "401": {
+                        "description": "Nao autenticado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/departments": {
+            "get": {
+                "tags": [
+                    "Departamentos"
+                ],
+                "summary": "Listar departamentos",
+                "description": "Retorna listagem paginada de departamentos com suporte a filtro por status e cache inteligente.",
+                "operationId": "e8478e3a557995e1da564073521762f6",
+                "parameters": [
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Filtro pelo status do departamento (ativo ou inativo)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "ativo",
+                                "inativo"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Quantidade de registros por pagina",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 15
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Numero da pagina",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Listagem de departamentos",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        },
+                                        "links": {
+                                            "type": "object"
+                                        },
+                                        "meta": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Nao autenticado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Departamentos"
+                ],
+                "summary": "Criar departamento",
+                "description": "Cadastra um novo departamento no sistema.",
+                "operationId": "9a3a8ebf7326b72fd181c15603cdd21e",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Engenharia de Software"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Equipe responsavel pelo desenvolvimento de software."
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "example": "ativo",
+                                        "enum": [
+                                            "ativo",
+                                            "inativo"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Departamento criado com sucesso",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Erro de validacao"
+                    },
+                    "401": {
+                        "description": "Nao autenticado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/departments/{id}": {
+            "get": {
+                "tags": [
+                    "Departamentos"
+                ],
+                "summary": "Exibir departamento e colaboradores",
+                "description": "Retorna os dados de um departamento juntamente com seus colaboradores associados.",
+                "operationId": "ba8d49f7da851631d9985375effc9b2d",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID do departamento",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Dados do departamento"
+                    },
+                    "404": {
+                        "description": "Departamento nao encontrado"
+                    },
+                    "401": {
+                        "description": "Nao autenticado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Departamentos"
+                ],
+                "summary": "Atualizar departamento",
+                "description": "Atualiza os dados de um departamento existente.",
+                "operationId": "883e32516e81142e7441bad60554a993",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID do departamento",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Tecnologia e Inovacao"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Descricao atualizada."
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "example": "ativo",
+                                        "enum": [
+                                            "ativo",
+                                            "inativo"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Departamento atualizado com sucesso"
+                    },
+                    "404": {
+                        "description": "Departamento nao encontrado"
+                    },
+                    "422": {
+                        "description": "Erro de validacao"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Departamentos"
+                ],
+                "summary": "Remover departamento",
+                "description": "Exclui um departamento sem colaboradores ativos vinculados.",
+                "operationId": "4f695822af3d4a6db6f902305be6d0de",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID do departamento",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Departamento excluido com sucesso"
+                    },
+                    "422": {
+                        "description": "Bloqueio por colaboradores ativos vinculados",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "mensagem": {
+                                            "type": "string",
+                                            "example": "O departamento possui colaboradores ativos e nao pode ser excluido."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Departamento nao encontrado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/departments/{id}/transfer-employees": {
+            "post": {
+                "tags": [
+                    "Transferencia"
+                ],
+                "summary": "Transferir colaboradores",
+                "description": "Transfere todos os colaboradores ativos do departamento de origem para o departamento de destino com execucao atomica e rollback em caso de falha.",
+                "operationId": "8108032ceed89d9b06721002eab92cdd",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID do departamento de origem",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "target_department_id"
+                                ],
+                                "properties": {
+                                    "target_department_id": {
+                                        "type": "integer",
+                                        "example": 2
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Transferencia concluida com sucesso",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Colaboradores transferidos com sucesso."
+                                        },
+                                        "transferred": {
+                                            "type": "integer",
+                                            "example": 5
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Origem e destino iguais ou erro de validacao"
+                    },
+                    "404": {
+                        "description": "Departamento nao encontrado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/employees": {
+            "get": {
+                "tags": [
+                    "Colaboradores"
+                ],
+                "summary": "Listar colaboradores",
+                "description": "Retorna listagem paginada de colaboradores com suporte a filtros por departamento e status.",
+                "operationId": "b9b73e1873c5fe36b951f014f711e4fa",
+                "parameters": [
+                    {
+                        "name": "department_id",
+                        "in": "query",
+                        "description": "Filtro por departamento",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Filtro por status (ativo ou inativo)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "ativo",
+                                "inativo"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Registros por pagina",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 15
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Numero da pagina",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Listagem de colaboradores",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        },
+                                        "links": {
+                                            "type": "object"
+                                        },
+                                        "meta": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Nao autenticado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Colaboradores"
+                ],
+                "summary": "Cadastrar colaborador",
+                "description": "Cadastra um novo colaborador no sistema.",
+                "operationId": "781d9d682a574c5e2c1dab17f782b5cd",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "email",
+                                    "department_id",
+                                    "role",
+                                    "hired_at"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Carlos Eduardo Lima"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "carlos.lima@oryon.com.br"
+                                    },
+                                    "department_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "role": {
+                                        "type": "string",
+                                        "example": "Desenvolvedor Backend Senior"
+                                    },
+                                    "hired_at": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2024-01-15"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "example": "ativo",
+                                        "enum": [
+                                            "ativo",
+                                            "inativo"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Colaborador cadastrado com sucesso",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Erro de validacao"
+                    },
+                    "401": {
+                        "description": "Nao autenticado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/employees/{id}": {
+            "get": {
+                "tags": [
+                    "Colaboradores"
+                ],
+                "summary": "Exibir colaborador",
+                "description": "Retorna os detalhes de um colaborador especifico.",
+                "operationId": "de09c8d9afb3f7114d227ad0645940ac",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID do colaborador",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Dados do colaborador"
+                    },
+                    "404": {
+                        "description": "Colaborador nao encontrado"
+                    },
+                    "401": {
+                        "description": "Nao autenticado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Colaboradores"
+                ],
+                "summary": "Atualizar colaborador",
+                "description": "Atualiza os dados cadastrais de um colaborador.",
+                "operationId": "55e1ceec679a0d1436c869735e984a83",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID do colaborador",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Carlos Eduardo Lima"
+                                    },
+                                    "role": {
+                                        "type": "string",
+                                        "example": "Tech Lead"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "example": "ativo",
+                                        "enum": [
+                                            "ativo",
+                                            "inativo"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Colaborador atualizado com sucesso"
+                    },
+                    "404": {
+                        "description": "Colaborador nao encontrado"
+                    },
+                    "422": {
+                        "description": "Erro de validacao"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Colaboradores"
+                ],
+                "summary": "Inativar colaborador",
+                "description": "Inativa o colaborador alterando seu status para inativo e aplicando Soft Delete.",
+                "operationId": "dc1326c2f6b4bed0201d62396ddfd970",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID do colaborador",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Colaborador inativado com sucesso",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "mensagem": {
+                                            "type": "string",
+                                            "example": "Colaborador inativado com sucesso."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Colaborador nao encontrado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "securitySchemes": {
+            "bearerAuth": {
+                "type": "http",
+                "description": "Insira o token JWT retornado no endpoint /api/auth/login para autenticar as requisicoes.",
+                "bearerFormat": "JWT",
+                "scheme": "bearer"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Autenticacao",
+            "description": "Autenticacao"
+        },
+        {
+            "name": "Departamentos",
+            "description": "Departamentos"
+        },
+        {
+            "name": "Transferencia",
+            "description": "Transferencia"
+        },
+        {
+            "name": "Colaboradores",
+            "description": "Colaboradores"
+        }
+    ]
+}

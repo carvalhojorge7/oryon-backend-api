@@ -1,0 +1,880 @@
+{
+	"info": {
+		"_postman_id": "8f3b2e59-a3e2-4f18-bc76-0f81d9f45612",
+		"name": "Oryon Gestao API - Teste Tecnico Backend",
+		"description": "Collection completa e humanizada contendo todos os fluxos da API de Gestao de Departamentos, Colaboradores e Transferencia.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "01. Autenticacao",
+			"item": [
+				{
+					"name": "01. Login (Obter Token JWT)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('token', jsonData.token_de_acesso);",
+									"    console.log('Token JWT capturado com sucesso.');",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"admin@oryon.com.br\",\n    \"password\": \"senha123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						},
+						"description": "Realiza login com credenciais de administrador e armazena automaticamente o token JWT na variavel {{token}} da collection."
+					},
+					"response": []
+				},
+				{
+					"name": "02. Dados do Usuario Logado (Me)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/auth/me",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"me"
+							]
+						},
+						"description": "Retorna informacoes cadastrais do usuario autenticado."
+					},
+					"response": []
+				},
+				{
+					"name": "03. Renovar Token de Acesso (Refresh)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('token', jsonData.token_de_acesso);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/auth/refresh",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"refresh"
+							]
+						},
+						"description": "Renova o token JWT de acesso."
+					},
+					"response": []
+				},
+				{
+					"name": "04. Encerrar Sessao (Logout)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/auth/logout",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"logout"
+							]
+						},
+						"description": "Invalida o token JWT e encerra a sessao."
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints de autenticacao JWT e controle de sessao."
+		},
+		{
+			"name": "02. Departamentos",
+			"item": [
+				{
+					"name": "01. Listar Departamentos (Paginado)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/departments?per_page=10&page=1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"departments"
+							],
+							"query": [
+								{
+									"key": "per_page",
+									"value": "10"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								}
+							]
+						},
+						"description": "Lista departamentos de forma paginada utilizando cache inteligente."
+					},
+					"response": []
+				},
+				{
+					"name": "02. Filtrar Departamentos por Status",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/departments?status=ativo",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"departments"
+							],
+							"query": [
+								{
+									"key": "status",
+									"value": "ativo"
+								}
+							]
+						},
+						"description": "Filtra apenas os departamentos com status ativo ou inativo."
+					},
+					"response": []
+				},
+				{
+					"name": "03. Criar Departamento",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('department_id', jsonData.data.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Qualidade e Processos\",\n    \"description\": \"Squad responsavel por melhoria continua e auditoria de qualidade.\",\n    \"status\": \"ativo\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/departments",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"departments"
+							]
+						},
+						"description": "Cadastra um novo departamento e invalida o cache automaticamente."
+					},
+					"response": []
+				},
+				{
+					"name": "04. Exibir Departamento e seus Colaboradores",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/departments/{{department_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"departments",
+								"{{department_id}}"
+							]
+						},
+						"description": "Retorna os detalhes do departamento e a lista de colaboradores associados."
+					},
+					"response": []
+				},
+				{
+					"name": "05. Atualizar Departamento",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Qualidade, Processos e ESG\",\n    \"description\": \"Squad atualizada com foco ampliado.\",\n    \"status\": \"ativo\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/departments/{{department_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"departments",
+								"{{department_id}}"
+							]
+						},
+						"description": "Atualiza os dados cadastrais de um departamento."
+					},
+					"response": []
+				},
+				{
+					"name": "06. Excluir Departamento sem Colaboradores (Sucesso)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/departments/{{department_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"departments",
+								"{{department_id}}"
+							]
+						},
+						"description": "Exclui um departamento vazio ou sem colaboradores ativos (retorna HTTP 204)."
+					},
+					"response": []
+				},
+				{
+					"name": "07. Tentar Excluir Departamento com Colaboradores Ativos (Bloqueio 422)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/departments/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"departments",
+								"1"
+							]
+						},
+						"description": "Demonstra o bloqueio por regra de negocio (HTTP 422) ao tentar excluir departamento que contem colaboradores ativos."
+					},
+					"response": []
+				}
+			],
+			"description": "CRUD completo de departamentos com validacao de integridade e cache."
+		},
+		{
+			"name": "03. Colaboradores",
+			"item": [
+				{
+					"name": "01. Listar Colaboradores (Paginado)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/employees?per_page=10&page=1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"employees"
+							],
+							"query": [
+								{
+									"key": "per_page",
+									"value": "10"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								}
+							]
+						},
+						"description": "Lista colaboradores de forma paginada."
+					},
+					"response": []
+				},
+				{
+					"name": "02. Filtrar Colaboradores por Departamento e Status",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/employees?department_id=1&status=ativo",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"employees"
+							],
+							"query": [
+								{
+									"key": "department_id",
+									"value": "1"
+								},
+								{
+									"key": "status",
+									"value": "ativo"
+								}
+							]
+						},
+						"description": "Aplica filtros simultaneos por departamento vinculado e status do colaborador."
+					},
+					"response": []
+				},
+				{
+					"name": "03. Cadastrar Colaborador",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('employee_id', jsonData.data.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Guilherme Santos\",\n    \"email\": \"guilherme.santos@oryon.com.br\",\n    \"department_id\": 1,\n    \"role\": \"Desenvolvedor Full-stack Pleno\",\n    \"hired_at\": \"2024-03-01\",\n    \"status\": \"ativo\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/employees",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"employees"
+							]
+						},
+						"description": "Cadastra um novo colaborador validando e-mail unico e integridade da chave estrangeira."
+					},
+					"response": []
+				},
+				{
+					"name": "04. Exibir Detalhes do Colaborador",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/employees/{{employee_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"employees",
+								"{{employee_id}}"
+							]
+						},
+						"description": "Consulta os dados detalhados de um colaborador."
+					},
+					"response": []
+				},
+				{
+					"name": "05. Atualizar Colaborador",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Guilherme Santos Silva\",\n    \"role\": \"Tech Lead\",\n    \"status\": \"ativo\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/employees/{{employee_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"employees",
+								"{{employee_id}}"
+							]
+						},
+						"description": "Atualiza dados cadastrais do colaborador."
+					},
+					"response": []
+				},
+				{
+					"name": "06. Inativar Colaborador (Delete Soft)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/employees/{{employee_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"employees",
+								"{{employee_id}}"
+							]
+						},
+						"description": "Inativa o colaborador alterando seu status para inativo e aplicando Soft Delete."
+					},
+					"response": []
+				}
+			],
+			"description": "CRUD de colaboradores com soft deletes e filtros combinados."
+		},
+		{
+			"name": "04. Transferencia de Colaboradores",
+			"item": [
+				{
+					"name": "01. Transferir Colaboradores Ativos (Sucesso)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"target_department_id\": 3\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/departments/1/transfer-employees",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"departments",
+								"1",
+								"transfer-employees"
+							]
+						},
+						"description": "Transfere exclusivamente os colaboradores ATIVOS do departamento 1 para o departamento 3 em transacao atomica."
+					},
+					"response": []
+				},
+				{
+					"name": "02. Tentar Transferir para o Mesmo Departamento (Bloqueio 422)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"target_department_id\": 1\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/departments/1/transfer-employees",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"departments",
+								"1",
+								"transfer-employees"
+							]
+						},
+						"description": "Demonstra a validacao de negocio impedindo transferencia quando origem e destino sao iguais."
+					},
+					"response": []
+				},
+				{
+					"name": "03. Tentar Transferir para Departamento Inexistente (Erro 422)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"target_department_id\": 99999\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/departments/1/transfer-employees",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"departments",
+								"1",
+								"transfer-employees"
+							]
+						},
+						"description": "Valida se o departamento de destino informado existe no banco de dados."
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoint de transferencia atomica de colaboradores entre departamentos com garantia de rollback."
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000/api",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "department_id",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "employee_id",
+			"value": "1",
+			"type": "string"
+		}
+	]
+}
